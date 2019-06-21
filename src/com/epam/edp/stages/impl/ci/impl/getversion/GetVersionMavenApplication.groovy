@@ -26,7 +26,7 @@ class GetVersionMavenApplication {
         script.dir("${context.workDir}") {
             context.codebase.version = script.sh(
                     script: """
-                        mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate \
+                        mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -B \
                         -Dexpression=project.version|grep -Ev '(^\\[|Download\\w+:)'
                     """,
                     returnStdout: true
