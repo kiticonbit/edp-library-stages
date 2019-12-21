@@ -18,15 +18,31 @@ class BuildImageApplication {
     Script script
 
     void run(context) {
-        def buildconfigName = "${context.codebase.name}-${context.git.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}"
+
+
+        def resourseSettings = [:]
+        context.codebase.imageBuildArgs = []
+        def buildconfigName = "${context.codebase.name}-${context.gerrit.branch.replaceAll("[^\\p{L}\\p{Nd}]+", "-")}"
         context.codebase.imageBuildArgs.push("--name=${buildconfigName}")
-        context.codebase.imageBuildArgs.push("--image-stream=s2i-${context.codebase.config.language.toLowerCase()}")
+        context.codebase.imageBuildArgs.push("--strategy=docker")
+        context.codebase.imageBuildArgs.push("--binary=true")
+
+        resourseSettings["cpuLimits"] = "1"
+        resourseSettings["memLimits"] = "1Gi"
+        resourseSettings["cpuRequests"]= "50m"
+        resourseSettings["memRequests"] = "500Mi"
+
         def resultTag
         def targetTags = [context.codebase.buildVersion, "latest"]
         script.openshift.withCluster() {
             script.openshift.withProject() {
                 if (!script.openshift.selector("buildconfig", "${buildconfigName}").exists())
-                    script.openshift.newBuild(context.codebase.imageBuildArgs)
+                    script.dir("${context.workDir}") {
+                        script.dir("${context.JsWorkDir}"){
+                            script.openshift.newBuild(context.codebase.imageBuildArgs)
+                            script.openshift.patch("bc/${buildconfigName}", '\'{\"spec\":{\"resources\":{\"limits\":{\"cpu\":' + resourseSettings.cpuLimits + ',\"memory\":' + "\"${resourseSettings.memLimits}\"" + '},\"requests\":{\"cpu\":' + "\"${resourseSettings.cpuRequests}\"" + ',\"memory\":' + "\"${resourseSettings.memRequests}\"" + '}}}}\'')
+                        }
+                    }
 
                 script.dir(context.codebase.deployableModuleDir) {
                     script.sh "tar -cf ${context.codebase.name}.tar *"
@@ -46,5 +62,4 @@ class BuildImageApplication {
             }
         }
     }
-
 }

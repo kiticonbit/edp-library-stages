@@ -17,7 +17,7 @@ package com.epam.edp.stages.impl.ci.impl.buildimage
 import com.epam.edp.stages.impl.ci.ProjectType
 import com.epam.edp.stages.impl.ci.Stage
 
-@Stage(name = "build-image", buildTool = ["maven","gradle"], type = [ProjectType.APPLICATION,ProjectType.AUTOTESTS])
+@Stage(name = "build-image2", buildTool = ["maven","gradle"], type = [ProjectType.APPLICATION,ProjectType.AUTOTESTS])
 class BuildImageMavenGradle {
     Script script
 
